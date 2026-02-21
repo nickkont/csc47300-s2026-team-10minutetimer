@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eventra — Home</title>
+
+    <!-- Link to external CSS -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <!-- NAV -->
+    <div class="nav">
+      <div class="container">
+        <div class="nav-inner">
+          <a class="brand" href="#">
+            <div class="logo" aria-hidden="true"></div>
+            <div>
+              <strong>Eventra</strong>
+              <span>Event contracts exchange (prototype)</span>
+            </div>
+          </a>
+
+          <!-- Keep nav simple for homepage skeleton -->
+          <div class="nav-links">
+            <a href="#markets">Markets</a>
+            <a href="#ccny">CCNY</a>
+            <a href="#about">About</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <header class="hero">
+      <div class="container">
+        <div class="hero-card" id="about">
+          <div class="pill-row">
+            <div class="pill">Pricing: $0.01 → $1.00</div>
+            <div class="pill">Sports • Politics • Social</div>
+            <div class="pill">CCNY markets</div>
+          </div>
+
+          <h1>Trade contracts on the outcomes of future events.</h1>
+          <p class="sub">
+            Eventra is an exchange similar to Kalshi where each market represents a future outcome.
+            This page is a static homepage mockup built with HTML + CSS only.
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <!-- MARKETS (Skeleton) -->
+    <main class="section" id="markets">
+      <div class="container">
+        <div class="section-head">
+          <h2>Featured Markets (Skeleton)</h2>
+          <p>UI only — no live data</p>
+        </div>
+
+        <div class="grid">
+          <!-- Left: market cards -->
+          <section class="panel">
+            <div class="panel-header">
+              <div class="title">Live Event Tracking & Market Data</div>
+              <div class="hint">Search / filters planned</div>
+            </div>
+
+            <div class="rows">
+              <article class="row">
+                <div class="row-top">
+                  <div>
+                    <h3>Will the Knicks make the playoffs this season?</h3>
+                    <div class="meta">
+                      <span class="tag">Sports</span>
+                      <span class="tag">Trending</span>
+                    </div>
+                  </div>
+                  <div class="price">
+                    <b>$0.63</b>
+                    <span>63%</span>
+                  </div>
+                </div>
+                <div class="bar" aria-hidden="true">
+                  <div class="fill" style="width: 63%"></div>
+                </div>
+              </article>
+
+              <article class="row">
+                <div class="row-top">
+                  <div>
+                    <h3>Will the Fed cut rates by the next meeting?</h3>
+                    <div class="meta">
+                      <span class="tag">Politics/Econ</span>
+                      <span class="tag">Macro</span>
+                    </div>
+                  </div>
+                  <div class="price">
+                    <b>$0.41</b>
+                    <span>41%</span>
+                  </div>
+                </div>
+                <div class="bar" aria-hidden="true">
+                  <div class="fill" style="width: 41%"></div>
+                </div>
+              </article>
+
+              <article class="row" id="ccny">
+                <div class="row-top">
+                  <div>
+                    <h3>CCNY: Will the shuttle bus service break down in the next month?</h3>
+                    <div class="meta">
+                      <span class="tag">CCNY</span>
+                      <span class="tag">Campus</span>
+                    </div>
+                  </div>
+                  <div class="price">
+                    <b>$0.29</b>
+                    <span>29%</span>
+                  </div>
+                </div>
+                <div class="bar" aria-hidden="true">
+                  <div class="fill" style="width: 29%"></div>
+                </div>
+              </article>
+
+              <article class="row">
+                <div class="row-top">
+                  <div>
+                    <h3>CCNY: Will Marshak Terrace be completed this year?</h3>
+                    <div class="meta">
+                      <span class="tag">CCNY</span>
+                      <span class="tag">Local</span>
+                    </div>
+                  </div>
+                  <div class="price">
+                    <b>$0.52</b>
+                    <span>52%</span>
+                  </div>
+                </div>
+                <div class="bar" aria-hidden="true">
+                  <div class="fill" style="width: 52%"></div>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <!-- Right: simple placeholders -->
+          <aside class="panel">
+            <div class="panel-header">
+              <div class="title">Planned Features</div>
+              <div class="hint">placeholders</div>
+            </div>
+
+            <div class="placeholder">
+              <div class="box">
+                <strong>Watchlist</strong>
+                <p>Save markets you care about and monitor changes over time.</p>
+              </div>
+
+              <div class="box">
+                <strong>Community Chats</strong>
+                <p>Discuss events and share info (sign-in required).</p>
+              </div>
+
+              <div class="box">
+                <strong>Account Dashboard</strong>
+                <p>View positions, open orders, filled orders, and P/L.</p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="container">
+        <div class="footer-row">
+          <div>
+            <strong>Eventra</strong>
+            <span class="footer-muted">• static mock</span>
+          </div>
+          <div class="footer-muted">HTML + CSS only</div>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
