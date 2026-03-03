@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"name": "csc47300-s2026-team-10minutetimer",
+			"path": "."
+		},
+		{
+			"name": "eventra images",
+			"path": "../../Downloads/website testing/eventra images"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "csc47300-s2026-team-10minutetimer"
+	}
+}
