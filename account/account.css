@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap');
 
- /* ── To match the dashboard scheme ── */
+ /* ── To match the dashboard scheme. Defines everything for later usuage ── */
 :root {
   --bg:      #0b0f1a;
   --panel:   rgba(255, 255, 255, 0.055);
@@ -15,6 +15,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ /* Reset the browser margins and flexbox to stack and center */
 
 body {
   font-family: 'Syne', sans-serif;
@@ -32,16 +33,16 @@ a { color: inherit; text-decoration: none; }
   position: sticky;
   top: 0;
   z-index: 50;
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px); /* ── gives a frosted glass look over the page ── */
   background: rgba(11, 15, 26, 0.7);
   border-bottom: 1px solid var(--border);
 }
-
+/* reusable centering wrapper with auto side margins */
 .container {
   width: min(900px, calc(100% - 40px));
   margin: 0 auto;
 }
-
+/* flexbox rows that lay out the logo, links ... */
 .nav-inner {
   display: flex;
   align-items: center;
@@ -74,6 +75,7 @@ a { color: inherit; text-decoration: none; }
 .nav-links a:hover  { color: var(--text); border-color: var(--border); }
 .nav-links a.active { color: var(--accent); border-color: rgba(44, 255, 154, 0.25); background: rgba(44, 255, 154, 0.06); }
 
+/* circular gradient badge in top right corner for user initials*/
 .avatar {
   width: 30px;
   height: 30px;
@@ -87,7 +89,7 @@ a { color: inherit; text-decoration: none; }
   color: #050a12;
 }
 
-/* ── PAGE ── */
+/* Adds top/bottom padding around the main content styles and bold 'account settings'*/
 .page { padding: 36px 0 64px; }
 
 .page-title {
@@ -96,7 +98,8 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 24px;
 }
 
-/* ── SECTIONS ── */
+/* ── SECTIONS ── 
+each card has a glassy background border and rounded corners. On load they fade and slide up*/
 .section {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -314,3 +317,4 @@ footer {
   .row { grid-template-columns: 1fr; }
   .nav-links { display: none; }
 }
+
