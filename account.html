@@ -273,18 +273,13 @@
   </div>
 </div>
 
-<footer>Eventra · Account · Firebase Auth</footer>
+<footer>Eventra · Account · Demo only (no real backend)</footer>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
 <script src="auth.js"></script>
 <script>
   (function () {
     var auth = window.EventraAuth;
     if (!auth) return;
-    var db = firebase.firestore();
     var currentUser = null;
     var lastProfileSnapshot = null;
 
@@ -342,17 +337,19 @@
     }
 
     function loadProfile(user) {
-      if (!user) return;
-      var docRef = db.collection("user").doc(user.uid);
-      docRef.get().then(function (snap) {
-        if (snap.exists) {
-          lastProfileSnapshot = snap.data();
-          applyProfile(lastProfileSnapshot);
-        } else {
-          lastProfileSnapshot = null;
-          applyProfile(null);
-        }
-      });
+      if (!user) {
+        applyProfile(null);
+        return;
+      }
+      try {
+        var raw = localStorage.getItem("eventra_profile_" + user.email);
+        var data = raw ? JSON.parse(raw) : null;
+        lastProfileSnapshot = data;
+        applyProfile(data);
+      } catch (e) {
+        lastProfileSnapshot = null;
+        applyProfile(null);
+      }
     }
 
     auth.onAuthStateChanged(function (user) {
@@ -397,41 +394,25 @@
         btnProfileSave.disabled = true;
         showProfileMessage("Saving profile…", false);
 
-        var docRef = db.collection("user").doc(currentUser.uid);
-        docRef
-          .set(
-            {
-              firstName: first || null,
-              lastName: last || null,
-              username: username || null,
-              phone: phone || null,
-              dob: dob || null,
-              timezone: tz,
-              language: lang,
-              bio: bio || null,
-              updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            },
-            { merge: true }
-          )
-          .then(function () {
-            lastProfileSnapshot = {
-              firstName: first,
-              lastName: last,
-              username: username,
-              phone: phone,
-              dob: dob,
-              timezone: tz,
-              language: lang,
-              bio: bio,
-            };
-            showProfileMessage("Profile saved.", false);
-          })
-          .catch(function (err) {
-            showProfileMessage(err.message || "Could not save profile.", true);
-          })
-          .finally(function () {
-            btnProfileSave.disabled = false;
-          });
+        try {
+          var payload = {
+            firstName: first,
+            lastName: last,
+            username: username,
+            phone: phone,
+            dob: dob,
+            timezone: tz,
+            language: lang,
+            bio: bio,
+          };
+          localStorage.setItem("eventra_profile_" + currentUser.email, JSON.stringify(payload));
+          lastProfileSnapshot = payload;
+          showProfileMessage("Profile saved (demo only, stored in this browser).", false);
+        } catch (e) {
+          showProfileMessage("Could not save profile in this browser.", true);
+        } finally {
+          btnProfileSave.disabled = false;
+        }
       });
     }
 
