@@ -24,7 +24,7 @@ const CURRENT_USER = { initials: "JD", name: "John Doe" };
 
 /* formats time to m(minutes), h(hours), or d(days) */
 function formatTime(minutesAgo) {
-  if (minutesAgo < 1)   return "just now";
+  if (minutesAgo < 1)   return "now";
   if (minutesAgo < 60)  return `${minutesAgo}m`;
   if (minutesAgo < 1440) return `${Math.floor(minutesAgo / 60)}h`;
   return `${Math.floor(minutesAgo / 1440)}d`;
@@ -54,19 +54,30 @@ function buildPostHTML(post) {
   const prob= Math.min(100, Math.max(0, post.market.currProb));
   /*keep count of comments */
   const commentCount= typeof post.comments === 'number' ? post.comments : 0;
-  
+    
   const imageHTML= post.image
     ? `<div class="post-images">
          <img src="${escapeHTML(post.image)}" alt="post image"/>
        </div>`
     : "";
 
+  const marketHTML = post.market.question !== "No market attached"?`
+  <div class="market-card">
+        <a href="#" class="market-link">
+          <div class="market-name">${escapeHTML(post.market.question)}</div>
+        </a>
+        <div class="market-meta">
+          ${escapeHTML(post.market.side)} · ${escapeHTML(post.market.category)} ·
+          was ${post.market.prevProb}% → now ${prob}%
+        </div>
+        <div class="prob-bar"><div class="prob-fill" style="width:${prob}%;"></div></div>
+       </div>`
+       
+   :""; 
+   const buyHTML = post.market.question !== "No market attached"
+    ? `<button class="btn-buy" data-id="${post.id}">Buy</button>`
+    : "";
   return `
-<!-- Posts/feed-->
- 
-    <div class="posts-feed">
-    <div class="container">
-    
       <!-- Sample post -->
     <div class="post-row"  data-post-id="${post.id}">
       <div class="avatar">${escapeHTML(post.initials)}</div>
@@ -77,20 +88,9 @@ function buildPostHTML(post) {
         </div>
         <div class="post-content">
           <p class="post-text">${escapeHTML(post.text)}</p>
-              ${imageHTML}
-         <div class="market-card">
-          <a href="#" class="market-link">
-
-          <div class="market-name" >${escapeHTML(post.market.question)}</div>
-          </a>
-
-          <div class="market-meta">${escapeHTML(post.market.side)} · ${escapeHTML(post.market.category)} ·
-              was ${post.market.prevProb}% → now ${prob}%</div>
-              <div class="prob-bar"><div class="prob-fill" style="width:${prob}%;"></div></div>
-          </div>
-          <hr class="divider">
-        
-
+              ${imageHTML} 
+              ${marketHTML} 
+       <hr class="divider">
        <div class="post-actions">
             <div class="post-action-row">
             <!-- comment icon-->
@@ -109,16 +109,12 @@ function buildPostHTML(post) {
             </button>
            </div>
            <div class = "buy-row" >
-            <button class="btn-buy" data-id="${post.id}">Buy</button>
-          </div>
-
-
+            ${buyHTML} 
         </div>
       </div>
     </div>
     </div>     
   </div>
-</div>
     `;
 }
 
@@ -141,7 +137,49 @@ function handleFeedClick(e) {
   }
 }
 
-function handleNewPost() {}   // for later
+function handleNewPost() {
+  const textarea = document.querySelector(".user-post-row textarea");
+  const text = textarea?.value.trim();
+
+  //don't post if textarea is empty
+  if (!text) return;
+
+  // new post structure matching buildPostHTML
+  const newPost = {
+    id:         nextPostId++,           // use and then increment the counter
+    name:       CURRENT_USER.name,
+    initials:   CURRENT_USER.initials,
+    minutesAgo: 0,                      // just posted = 0 minutes ago
+    text:       text,
+    image:      pendingImageDataUrl,    // null if no image was uploaded
+    liked:      false,
+    likes:      0,
+    comments:   0,
+    market: {
+      question: "No market attached",  // placeholder until you build market picker
+      side:     "",
+      category: "",
+      prevProb: 0,
+      currProb: 0
+    }
+  };
+
+  //Prepend to postsData so it appears at the top of the feed
+  postsData.unshift(newPost);
+
+  // Save the whole array to localStorage as a JSON string
+  // so posts survive a page refresh
+  localStorage.setItem("postsData", JSON.stringify(postsData));
+
+  //clear the form
+  textarea.value       = "";
+  pendingImageDataUrl  = null;
+  document.querySelector("#file-upload").value = "";
+
+  //re-render the feed with the new post included
+  renderFeed();
+}
+
 
 function handleTabClick(e) { /* when you click on a tab it will change the active filter and render the feed again*/
   const tab = e.target.closest(".time-tab");
@@ -152,6 +190,7 @@ function handleTabClick(e) { /* when you click on a tab it will change the activ
   );
   renderFeed();
 }
+
 
 /* filter posts based on the active filter */
 function renderFeed() { 
@@ -165,4 +204,20 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelector(".posts-feed")?.addEventListener("click", handleFeedClick);
   document.querySelector(".btn-post")?.addEventListener("click", handleNewPost);
   document.querySelector(".time-tabs")?.addEventListener("click", handleTabClick);
+  //used to save the active tab so when clicked it will stay the same as the tab active
+const saved = localStorage.getItem("activeTab");
+  if (saved) {
+    const matchingTab = [...document.querySelectorAll(".time-tab")]
+      .find(t => t.textContent.trim() === saved);
+    if (matchingTab) {
+      activeFilter = saved;
+      document.querySelectorAll(".time-tab").forEach(t =>
+        t.classList.toggle("active", t === matchingTab)
+      );
+    }
+  }
 });
+
+
+
+
