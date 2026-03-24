@@ -9,8 +9,6 @@ fetch("sample-posts.json")
 });
 /* in-memory "database" of posts, comments, and which threads are open. */
 let nextPostId = 1000;
-let nextCommentId = 5000;
-const openComments = new Set();
 /* which time-filter is active (matches .time-tab text) */
 let activeFilter = "Now";
 /*it's currently null until user selects an image */

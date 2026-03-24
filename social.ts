@@ -32,11 +32,6 @@ fetch("sample-posts.json")
 
 /* in-memory "database" of posts, comments, and which threads are open. */ 
 let nextPostId: number= 1000;
-let nextCommentId: number = 5000;
-const openComments: Set<number> = new Set<number>();
-            
-
-
 /* which time-filter is active (matches .time-tab text) */
 let activeFilter:string = "Now";
 
