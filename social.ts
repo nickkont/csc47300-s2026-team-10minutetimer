@@ -24,7 +24,7 @@ interface Post {
 let postsData: Post[] = [];
 
 fetch("sample-posts.json")
-  .then((r: Response): Promise<Post[]> => r.json())
+  .then(async (r) => await r.json() as Post[])
   .then((data: Post[]): void => {
     postsData.push(...data);
     renderFeed();

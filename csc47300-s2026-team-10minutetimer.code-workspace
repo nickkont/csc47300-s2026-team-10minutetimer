@@ -10,6 +10,7 @@
 		}
 	],
 	"settings": {
-		"liveServer.settings.multiRootWorkspaceName": "csc47300-s2026-team-10minutetimer"
+		"liveServer.settings.multiRootWorkspaceName": "csc47300-s2026-team-10minutetimer",
+		"liveServer.settings.port": 5501
 	}
 }
