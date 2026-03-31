@@ -31,9 +31,6 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* --NAV--*/
-/* ───────────────────────────────────────────────
-   EVENTRA NAVBAR — MATCHES CLASSMATE'S STYLE
-   ─────────────────────────────────────────────── */
 
 .nav {
   position: sticky;
@@ -192,7 +189,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 
-/* ── Page layout: sidebar + feed ─────────────────────────────────────────── */
+/* ── Page layout: sidebar + feed */
 .page-layout {
   max-width: 1100px;
   margin: 0 auto;
@@ -203,7 +200,7 @@ a { color: inherit; text-decoration: none; }
   align-items: start;
 }
 
-/* ── Left Sidebar ─────────────────────────────────────────────────────────── */
+/* ── Left Sidebar */
 .left-sidebar {
   position: sticky;
   top: 80px;
@@ -273,7 +270,7 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: 0.5px;
 }
 
-/* ── Feed column ─────────────────────────────────────────────────────────── */
+/* ── Feed column */
 .feed-col {
   display: flex;
   flex-direction: column;
@@ -292,7 +289,7 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 18px;
 }
 
-/* ── Composer ────────────────────────────────────────────────────────────── */
+/* ── Composer */
 .composer-section {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -612,7 +609,7 @@ a { color: inherit; text-decoration: none; }
 
 
 
-/* ── Market picker modal ─────────────────────────────────────────────────── */
+/* ── Market picker modal */
 
 .market-search-input::placeholder { color: var(--muted); }
 .market-search-input:focus { border-color: rgba(34,197,94,0.4); }
