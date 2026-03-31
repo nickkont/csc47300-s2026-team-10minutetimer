@@ -31,70 +31,126 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* --NAV--*/
+/* ───────────────────────────────────────────────
+   EVENTRA NAVBAR — MATCHES CLASSMATE'S STYLE
+   ─────────────────────────────────────────────── */
+
 .nav {
   position: sticky;
   top: 0;
-  backdrop-filter: blur(14px);
-  background: rgba(11, 15, 26, 0.7);
+  z-index: 100;
+  backdrop-filter: blur(16px);
+  background: rgba(11,16,32,0.85);
   border-bottom: 1px solid var(--border);
-}
-/* center content and limit width for the tabs filter too */
-.nav .container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 20px; /* left/right breathing room */
-  width: 100%;
-}
-#nav-auth {
+  height: 72px; /* taller like classmate */
   display: flex;
   align-items: center;
-  gap: 12px;   
+}
+
+.nav .container {
+  max-width: 1200px;
+  width: 94vw;
+  margin: 0 auto;
 }
 
 .nav-inner {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px;
-  gap: 16px;
+  gap: 24px;
 }
 
-.nav-links {
+/* BRAND */
+.brand {
   display: flex;
-  gap: 2px;
-  flex: 1; /* THIS centers the links */
-  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.45rem; /* bigger brand text */
+  letter-spacing: -0.5px;
 }
-
-
-.brand { display: flex; align-items: center; gap: 10px; }
 
 .logo {
-  width: 32px;
-  height: 32px;
+  width: 38px;   /* bigger logo */
+  height: 38px;
   border-radius: 10px;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 1), rgba(34, 197, 94, 1));
+  background: linear-gradient(135deg, #7c3aed, #22c55e);
 }
 
-.brand strong {
-  font-size: 18px;        /* was 15px */
-  font-weight: 800;
+/* NAV LINKS */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 26px; /* more spacing between links */
 }
-
 
 .nav-links a {
-  font-size: 15px;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--muted);
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid transparent;
+  padding: 8px 14px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
 }
 
-.nav-links a:hover  { color: var(--text); border-color: var(--border); }
-.nav-links a:active { color: var(--accent); border-color: rgba(171, 44, 255, 0.25); background: rgba(44, 255, 154, 0.06); }
+.nav-links a:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+}
+
+.nav-links a.active {
+  color: var(--text);
+  background: rgba(124,58,237,0.15);
+}
+
+/* RIGHT SIDE AUTH BUTTONS */
+.nav-actions-right {
+  display: flex;
+  align-items: center;
+}
+
+#nav-auth {
+  display: flex;
+  align-items: center;
+  gap: 14px; /* spacing between login + signup */
+}
+
+/* LOGIN BUTTON */
+.btn-nav-ghost {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  transition: all 0.15s ease;
+}
+
+.btn-nav-ghost:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+}
+
+/* SIGNUP BUTTON */
+.btn-nav-primary {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  color: #fff;
+  border: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.btn-nav-primary:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
 
 /* Avatar used in nav and post rows */
 .avatar {
@@ -878,126 +934,119 @@ a { color: inherit; text-decoration: none; }
 
 #file-upload { display: none; }
 
-.btn-nav-primary {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 7px 14px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #5b21b6);
-  color: #fff;
-  transition: opacity 0.15s, transform 0.15s;
-}
-.btn-nav-primary:hover {
-  opacity: 0.88;
-  transform: translateY(-1px);
-}
-
-.btn-nav-ghost {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 7px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  transition: all 0.15s;
-}
-.btn-nav-ghost:hover {
-  color: var(--text);
-  background: rgba(255,255,255,0.05);
-}
 
 /* ───────────────────────────────────────────────
-   LOGIN / SIGNUP POPUP (CLEAN + CENTERED)
+   EVENTRA LOGIN POPUP — MATCHES LOGIN PAGE STYLE
    ─────────────────────────────────────────────── */
 
 #login-gate.modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(10px);
   display: none;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  backdrop-filter: blur(4px);
 }
 
-/* Popup box */
+/* Popup card */
 .login-popup {
-  background: white;
-  padding: 28px 26px;
-  border-radius: 14px;
-  width: 340px;
+  background: #141927; /* same as login page panel */
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 20px;
+  padding: 32px 30px;
+  width: 360px;
   text-align: center;
-  position: relative;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  animation: popIn 200ms ease-out;
 }
 
 /* Title */
 .login-popup h2 {
   font-family: 'Outfit', sans-serif;
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 10px;
-  color: #111;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
 }
 
-/* Description */
+/* Subtitle */
 .login-popup p {
-  font-size: 14px;
-  color: #444;
-  margin-bottom: 18px;
+  font-size: 0.92rem;
+  color: var(--muted);
+  margin-bottom: 22px;
 }
 
-/* Buttons container — FIXED SPACING */
+/* Buttons container */
 .login-popup-buttons {
   display: flex;
   justify-content: center;
-  gap: 16px;        
+  gap: 14px; /* ⭐ spacing between buttons */
   margin-top: 10px;
 }
 
-/* Buttons */
-.login-popup-buttons a {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 18px;
-  border-radius: 8px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-/* Primary button */
+/* Primary button (Log in) */
 .login-popup-buttons .btn-primary {
-  background: linear-gradient(135deg, var(--accent2), var(--accent));
-  color: white;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6); /* same gradient as login page */
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.login-popup-buttons .btn-primary:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
 }
 
-/* Ghost button */
+/* Ghost button (Sign up) */
 .login-popup-buttons .btn-ghost {
-  border: 1px solid #ccc;
-  color: #333;
-  background: #f7f7f7;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.05);
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
 }
-
 .login-popup-buttons .btn-ghost:hover {
-  background: #eee;
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
 }
 
 /* Close button */
 .close-btn {
   position: absolute;
-  top: 10px;
-  right: 12px;
-  background: none;
-  border: none;
-  font-size: 22px;
+  top: 12px;
+  right: 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.14);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--muted);
   cursor: pointer;
-  color: #444;
+  transition: all 0.15s;
 }
+.close-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+}
+
+/* Popup animation */
+@keyframes popIn {
+  from { transform: translateY(14px) scale(0.97); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
 
 
 /* COMMENT SECTION (toggles when comment button is clicked) */

@@ -1,20 +1,18 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Community from "./pages/Community";
-import Marketplace from "./pages/Marketplace";
-import MarketPage from "./pages/MarketPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Marketplace from "./pages/Marketplace";
+import Account from "./pages/Account";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Community />} />
-        <Route path="/markets" element={<Marketplace />} />
-        <Route path="/market/:id" element={<MarketPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Community />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/marketplace" element={<Marketplace />} />
+      <Route path="/account" element={<Account />} />
+    </Routes>
   );
 }
