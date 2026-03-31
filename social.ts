@@ -80,6 +80,7 @@ function escapeHTML(str: string | null | undefined): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
+
 /* The function that builds the HTML for the posts */
 function buildPostHTML(post: Post): string{
   
@@ -250,6 +251,17 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelector(".posts-feed")?.addEventListener("click", handleFeedClick as EventListener);
   document.querySelector(".btn-post")?.addEventListener("click", handleNewPost as EventListener);
   document.querySelector(".time-tabs")?.addEventListener("click", handleTabClick as EventListener);
+  document.querySelector("#file-upload")?.addEventListener("change", (e) => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    pendingImageDataUrl = reader.result as string;
+  };
+  reader.readAsDataURL(file);
+});
+
   //used to save the active tab so when clicked it will stay the same as the tab active
 const saved:string|null = localStorage.getItem("activeTab");
   if (saved) {

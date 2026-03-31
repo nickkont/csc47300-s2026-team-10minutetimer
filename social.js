@@ -201,6 +201,16 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector(".posts-feed")?.addEventListener("click", handleFeedClick);
     document.querySelector(".btn-post")?.addEventListener("click", handleNewPost);
     document.querySelector(".time-tabs")?.addEventListener("click", handleTabClick);
+    document.querySelector("#file-upload")?.addEventListener("change", (e) => {
+        const file = e.target.files?.[0];
+        if (!file)
+            return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            pendingImageDataUrl = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
     //used to save the active tab so when clicked it will stay the same as the tab active
     const saved = localStorage.getItem("activeTab");
     if (saved) {
