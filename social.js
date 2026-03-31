@@ -1,5 +1,12 @@
 "use strict";
 //convert js to ts
+const TRENDING_MARKETS = [
+    { id: 1, question: "Will the shuttle bus break down next month?", category: "ccny", side: "YES", prevProb: 55, currProb: 62 },
+    { id: 2, question: "Will Marshak Terrace be completed this year?", category: "ccny", side: "NO", prevProb: 50, currProb: 47 },
+    { id: 3, question: "Will the library extend hours during finals?", category: "ccny", side: "YES", prevProb: 60, currProb: 71 },
+    { id: 4, question: "Will the Knicks win their next 3 games?", category: "sports", side: "NO", prevProb: 40, currProb: 35 },
+    { id: 5, question: "Will the Yankees make the World Series?", category: "sports", side: "YES", prevProb: 48, currProb: 44 }
+];
 let postsData = [];
 fetch("sample-posts.json")
     .then(async (r) => await r.json())
@@ -25,7 +32,149 @@ const openComments = new Set();
 let activeFilter = "Today";
 /*it's currently null until user selects an image */
 let pendingImageDataUrl = null;
+/* legacy current user (kept but not used for auth UI anymore) */
 const CURRENT_USER = { initials: "JD", name: "John Doe" };
+/* selected market for composer */
+let selectedMarket = null;
+let pickerCatFilter = "all";
+let pickerSearchQuery = "";
+/* ── Auth helpers ── */
+function getCurrentUser() {
+    if (typeof window.EventraAuth === "undefined")
+        return null;
+    const user = window.EventraAuth.getCurrentUser();
+    if (!user)
+        return null;
+    const raw = (user.displayName || user.email.split("@")[0]).trim();
+    const parts = raw.split(/\s+/);
+    const initials = parts
+        .map((p) => (p[0] ?? "").toUpperCase())
+        .join("")
+        .slice(0, 3) || "??";
+    return { name: raw, initials };
+}
+function updateAuthUI() {
+    const navAuth = document.getElementById("nav-auth");
+    const navUser = document.getElementById("nav-user");
+    const navAvatar = document.getElementById("nav-avatar");
+    const composerAvatar = document.getElementById("composer-avatar");
+    const user = getCurrentUser();
+    if (user) {
+        if (navAuth)
+            navAuth.style.display = "none";
+        if (navUser)
+            navUser.style.display = "flex";
+        if (navAvatar)
+            navAvatar.textContent = user.initials;
+        if (composerAvatar)
+            composerAvatar.textContent = user.initials;
+    }
+    else {
+        if (navAuth)
+            navAuth.style.display = "flex";
+        if (navUser)
+            navUser.style.display = "none";
+        if (composerAvatar)
+            composerAvatar.textContent = "?";
+    }
+}
+/* ── Login gate modal ── */
+function openLoginGate() {
+    const gate = document.getElementById("login-gate");
+    if (gate)
+        gate.style.display = "flex";
+}
+function closeLoginGate() {
+    const gate = document.getElementById("login-gate");
+    if (gate)
+        gate.style.display = "none";
+}
+/* ── Sidebar trending markets ── */
+function renderSidebar() {
+    const el = document.getElementById("sidebar-markets");
+    if (!el)
+        return;
+    el.innerHTML = TRENDING_MARKETS.slice(0, 5).map(m => `
+    <div class="sidebar-market-card">
+      <span class="market-tag ${escapeHTML(m.category)}">${escapeHTML(m.category.toUpperCase())}</span>
+      <div class="sidebar-market-q">${escapeHTML(m.question)}</div>
+      <div class="prob-bar"><div class="prob-fill" style="width:${m.currProb}%"></div></div>
+      <div class="sidebar-market-footer">
+        <span class="sidebar-yes">YES</span>
+        <span style="color:${m.currProb >= 50 ? "var(--accent)" : "var(--muted)"};font-weight:700;font-size:12px">${m.currProb}%</span>
+      </div>
+    </div>`).join("");
+}
+/* ── Market picker modal ── */
+function openMarketPicker() {
+    const picker = document.getElementById("market-picker");
+    if (picker)
+        picker.style.display = "flex";
+    renderMarketPicker();
+}
+function closeMarketPicker() {
+    const picker = document.getElementById("market-picker");
+    if (picker)
+        picker.style.display = "none";
+}
+function renderMarketPicker() {
+    const pillsEl = document.getElementById("market-cat-pills");
+    if (pillsEl) {
+        pillsEl.innerHTML = ["all", "ccny", "sports", "politics"]
+            .map(c => `<button class="cat-pill${pickerCatFilter === c ? " active" : ""}" data-cat="${c}">${c === "all" ? "All" : c.toUpperCase()}</button>`)
+            .join("");
+    }
+    const listEl = document.getElementById("market-list");
+    if (!listEl)
+        return;
+    const filtered = TRENDING_MARKETS.filter(m => {
+        const catOk = pickerCatFilter === "all" || m.category === pickerCatFilter;
+        const searchOk = m.question.toLowerCase().includes(pickerSearchQuery.toLowerCase());
+        return catOk && searchOk;
+    });
+    if (filtered.length === 0) {
+        listEl.innerHTML = `<p class="market-empty">No markets found.</p>`;
+        return;
+    }
+    listEl.innerHTML = filtered.map(m => {
+        const isSel = selectedMarket?.id === m.id;
+        return `
+      <div class="market-pick-item${isSel ? " selected" : ""}" data-market-id="${m.id}">
+        <div class="market-pick-top">
+          <span class="market-tag ${escapeHTML(m.category)}">${escapeHTML(m.category.toUpperCase())}</span>
+          <span class="market-pick-prob">${m.currProb}%</span>
+        </div>
+        <div class="market-pick-question">${escapeHTML(m.question)}</div>
+        <div class="prob-bar"><div class="prob-fill" style="width:${m.currProb}%"></div></div>
+        ${isSel ? `<div class="market-pick-check">✓ Selected</div>` : ""}
+      </div>`;
+    }).join("");
+}
+function attachMarket(marketId) {
+    const m = TRENDING_MARKETS.find(x => x.id === marketId);
+    if (!m)
+        return;
+    selectedMarket = m;
+    updateAttachedPreview();
+    closeMarketPicker();
+}
+function updateAttachedPreview() {
+    const preview = document.getElementById("attached-market-preview");
+    const content = document.getElementById("attached-market-content");
+    if (!preview || !content)
+        return;
+    if (selectedMarket) {
+        content.innerHTML = `
+      <span class="market-tag ${escapeHTML(selectedMarket.category)}">${escapeHTML(selectedMarket.category.toUpperCase())}</span>
+      <div class="attached-market-question">${escapeHTML(selectedMarket.question)}</div>
+      <div class="prob-bar" style="margin-top:6px"><div class="prob-fill" style="width:${selectedMarket.currProb}%"></div></div>`;
+        preview.style.display = "flex";
+    }
+    else {
+        preview.style.display = "none";
+        content.innerHTML = "";
+    }
+}
 function getMinutesAgo(timestamp) {
     return Math.floor((Date.now() - timestamp) / 60000);
 }
@@ -161,19 +310,24 @@ function handleFeedClick(e) {
         const id = parseInt(e.target.dataset.id);
         const post = postsData.find(p => p.id === id);
         const input = document.querySelector(`.comment-input[data-id="${id}"]`);
-        if (post && input.value.trim()) {
-            post.comments.push({
-                id: nextCommentId++,
-                initials: CURRENT_USER.initials,
-                name: CURRENT_USER.name,
-                text: input.value.trim(),
-                minutesAgo: 0, // new comment = 0 minutes ago
-                timestamp: Date.now() // real timestamp
-            });
-            input.value = "";
-            localStorage.setItem("postsData", JSON.stringify(postsData));
-            renderFeed();
+        if (!post || !input || !input.value.trim())
+            return;
+        const user = getCurrentUser();
+        if (!user) {
+            openLoginGate();
+            return;
         }
+        post.comments.push({
+            id: nextCommentId++,
+            initials: user.initials,
+            name: user.name,
+            text: input.value.trim(),
+            minutesAgo: 0, // new comment = 0 minutes ago
+            timestamp: Date.now() // real timestamp
+        });
+        input.value = "";
+        localStorage.setItem("postsData", JSON.stringify(postsData));
+        renderFeed();
         return; // ⭐ stop here so it doesn't fall into like/share logic
     }
     // ⭐ THEN handle like/share buttons
@@ -185,6 +339,11 @@ function handleFeedClick(e) {
     const post = postsData.find(p => p.id === id);
     // LIKE BUTTON
     if (action === "like" && post) {
+        const user = getCurrentUser();
+        if (!user) {
+            openLoginGate();
+            return;
+        }
         post.liked = !post.liked;
         post.likes += post.liked ? 1 : -1;
         const likecountid = document.querySelector(`.like_count[data-id="${id}"]`);
@@ -212,30 +371,41 @@ function handleFeedClick(e) {
     }
 }
 function handleNewPost() {
+    const user = getCurrentUser();
+    if (!user) {
+        openLoginGate();
+        return;
+    }
     const textarea = document.querySelector(".user-post-row textarea");
     const text = textarea?.value.trim();
-    //don't post if textarea is empty
-    if (!text)
+    if (!text && !pendingImageDataUrl)
         return;
-    // new post structure matching buildPostHTML
     const newPost = {
-        id: nextPostId++, // use and then increment the counter
-        name: CURRENT_USER.name,
-        initials: CURRENT_USER.initials,
-        minutesAgo: 0, // just posted = 0 minutes ago
+        id: nextPostId++,
+        name: user.name,
+        initials: user.initials,
+        minutesAgo: 0,
         timestamp: Date.now(),
-        text: text,
-        image: pendingImageDataUrl, // null if no image was uploaded
+        text: text || "",
+        image: pendingImageDataUrl,
         liked: false,
         likes: 0,
         comments: [],
-        market: {
-            question: "No market attached", // placeholder until you build market picker
-            side: "",
-            category: "",
-            prevProb: 0,
-            currProb: 0
-        }
+        market: selectedMarket
+            ? {
+                question: selectedMarket.question,
+                side: selectedMarket.side,
+                category: selectedMarket.category,
+                prevProb: selectedMarket.prevProb,
+                currProb: selectedMarket.currProb
+            }
+            : {
+                question: "No market attached",
+                side: "",
+                category: "",
+                prevProb: 0,
+                currProb: 0
+            }
     };
     //Prepend to postsData so it appears at the top of the feed
     postsData.unshift(newPost);
@@ -246,6 +416,8 @@ function handleNewPost() {
     if (textarea)
         textarea.value = "";
     pendingImageDataUrl = null;
+    selectedMarket = null;
+    updateAttachedPreview();
     const fileInput = document.querySelector("#file-upload");
     if (fileInput)
         fileInput.value = "";
@@ -271,7 +443,7 @@ function renderFeed() {
 /* filter posts based on the active filter */
 document.addEventListener("DOMContentLoaded", () => {
     document.querySelector(".posts-feed")?.addEventListener("click", handleFeedClick);
-    document.querySelector(".btn-post")?.addEventListener("click", handleNewPost);
+    document.getElementById("post-btn")?.addEventListener("click", handleNewPost);
     document.querySelector(".time-tabs")?.addEventListener("click", handleTabClick);
     document.querySelector("#file-upload")?.addEventListener("change", (e) => {
         const file = e.target.files?.[0];
@@ -293,4 +465,54 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelectorAll(".time-tab").forEach(t => t.classList.toggle("active", t === matchingTab));
         }
     }
+    // auth + sidebar + market picker + login gate wiring
+    updateAuthUI();
+    renderSidebar();
+    if (typeof window.EventraAuth !== "undefined") {
+        window.EventraAuth.onAuthStateChanged(() => {
+            updateAuthUI();
+        });
+    }
+    document.getElementById("attach-market-btn")
+        ?.addEventListener("click", openMarketPicker);
+    document.getElementById("market-picker-close")
+        ?.addEventListener("click", closeMarketPicker);
+    document.getElementById("market-picker")
+        ?.addEventListener("click", (e) => {
+        if (e.target.id === "market-picker")
+            closeMarketPicker();
+    });
+    document.getElementById("market-search")
+        ?.addEventListener("input", (e) => {
+        pickerSearchQuery = e.target.value;
+        renderMarketPicker();
+    });
+    document.getElementById("market-cat-pills")
+        ?.addEventListener("click", (e) => {
+        const pill = e.target.closest(".cat-pill");
+        if (!pill)
+            return;
+        pickerCatFilter = pill.dataset.cat ?? "all";
+        renderMarketPicker();
+    });
+    document.getElementById("market-list")
+        ?.addEventListener("click", (e) => {
+        const item = e.target.closest(".market-pick-item");
+        if (!item)
+            return;
+        const mid = parseInt(item.dataset.marketId ?? "", 10);
+        attachMarket(mid);
+    });
+    document.getElementById("detach-market-btn")
+        ?.addEventListener("click", () => {
+        selectedMarket = null;
+        updateAttachedPreview();
+    });
+    document.getElementById("login-gate-close")
+        ?.addEventListener("click", closeLoginGate);
+    document.getElementById("login-gate")
+        ?.addEventListener("click", (e) => {
+        if (e.target.id === "login-gate")
+            closeLoginGate();
+    });
 });

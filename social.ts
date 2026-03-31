@@ -1,5 +1,7 @@
 //convert js to ts
 
+//convert js to ts
+
 interface Market {
   question: string;
   side: string;
@@ -30,8 +32,37 @@ interface PostComment {
   timestamp: number;   
 }
 
+interface TrendingMarket {
+  id: number;
+  question: string;
+  category: string;
+  side: string;
+  prevProb: number;
+  currProb: number;
+}
+
+interface DemoUser {
+  uid: string;
+  email: string;
+  displayName: string | null;
+}
+
+  interface Window {
+    EventraAuth?: {
+      getCurrentUser(): DemoUser | null;
+      signUp(email: string, password: string, displayName: string | null): Promise<void>;
+      onAuthStateChanged(cb: () => void): void;
+    };
+  }
 
 
+const TRENDING_MARKETS: TrendingMarket[] = [
+  { id: 1, question: "Will the shuttle bus break down next month?", category: "ccny", side: "YES", prevProb: 55, currProb: 62 },
+  { id: 2, question: "Will Marshak Terrace be completed this year?", category: "ccny", side: "NO", prevProb: 50, currProb: 47 },
+  { id: 3, question: "Will the library extend hours during finals?", category: "ccny", side: "YES", prevProb: 60, currProb: 71 },
+  { id: 4, question: "Will the Knicks win their next 3 games?", category: "sports", side: "NO", prevProb: 40, currProb: 35 },
+  { id: 5, question: "Will the Yankees make the World Series?", category: "sports", side: "YES", prevProb: 48, currProb: 44 }
+];
 
 let postsData: Post[] = [];
 
@@ -40,7 +71,7 @@ fetch("sample-posts.json")
   .then((data: Post[]): void => {
     const now = Date.now();
 
-   postsData = data.map(p => ({
+    postsData = data.map(p => ({
       ...p,
 
       // Convert post minutesAgo -> timestamp
@@ -56,7 +87,6 @@ fetch("sample-posts.json")
     renderFeed();
   });
 
-
 /* in-memory "database" of posts, comments, and which threads are open. */ 
 let nextPostId: number= 1000;
 let nextCommentId: number = 5000;
@@ -64,12 +94,152 @@ const openComments: Set<number> = new Set<number>();
 /* which time-filter is active (matches .time-tab text) */
 let activeFilter: string = "Today";
 
-
-
 /*it's currently null until user selects an image */
 let pendingImageDataUrl:string|null = null;
 
+/* legacy current user (kept but not used for auth UI anymore) */
 const CURRENT_USER:{ initials:string, name: string}={initials:"JD", name: "John Doe" };
+
+/* selected market for composer */
+let selectedMarket: TrendingMarket | null = null;
+let pickerCatFilter: string = "all";
+let pickerSearchQuery: string = "";
+
+/* ── Auth helpers ── */
+function getCurrentUser(): { initials: string; name: string } | null {
+  if (typeof window.EventraAuth === "undefined") return null;
+  const user = window.EventraAuth.getCurrentUser();
+  if (!user) return null;
+  const raw = (user.displayName || user.email.split("@")[0]).trim();
+  const parts = raw.split(/\s+/);
+  const initials = parts
+    .map((p: string) => (p[0] ?? "").toUpperCase())
+    .join("")
+    .slice(0, 3) || "??";
+  return { name: raw, initials };
+}
+
+function updateAuthUI(): void {
+  const navAuth = document.getElementById("nav-auth");
+  const navUser = document.getElementById("nav-user");
+  const navAvatar = document.getElementById("nav-avatar");
+  const composerAvatar = document.getElementById("composer-avatar");
+
+  const user = getCurrentUser();
+
+  if (user) {
+    if (navAuth) navAuth.style.display = "none";
+    if (navUser) navUser.style.display = "flex";
+    if (navAvatar) navAvatar.textContent = user.initials;
+    if (composerAvatar) composerAvatar.textContent = user.initials;
+  } else {
+    if (navAuth) navAuth.style.display = "flex";
+    if (navUser) navUser.style.display = "none";
+    if (composerAvatar) composerAvatar.textContent = "?";
+  }
+}
+
+/* ── Login gate modal ── */
+function openLoginGate(): void {
+  const gate = document.getElementById("login-gate");
+  if (gate) gate.style.display = "flex";
+}
+
+function closeLoginGate(): void {
+  const gate = document.getElementById("login-gate");
+  if (gate) gate.style.display = "none";
+}
+
+
+/* ── Sidebar trending markets ── */
+function renderSidebar(): void {
+  const el = document.getElementById("sidebar-markets");
+  if (!el) return;
+  el.innerHTML = TRENDING_MARKETS.slice(0, 5).map(m => `
+    <div class="sidebar-market-card">
+      <span class="market-tag ${escapeHTML(m.category)}">${escapeHTML(m.category.toUpperCase())}</span>
+      <div class="sidebar-market-q">${escapeHTML(m.question)}</div>
+      <div class="prob-bar"><div class="prob-fill" style="width:${m.currProb}%"></div></div>
+      <div class="sidebar-market-footer">
+        <span class="sidebar-yes">YES</span>
+        <span style="color:${m.currProb >= 50 ? "var(--accent)" : "var(--muted)"};font-weight:700;font-size:12px">${m.currProb}%</span>
+      </div>
+    </div>`).join("");
+}
+
+/* ── Market picker modal ── */
+function openMarketPicker(): void {
+  const picker = document.getElementById("market-picker");
+  if (picker) picker.style.display = "flex";
+  renderMarketPicker();
+}
+
+function closeMarketPicker(): void {
+  const picker = document.getElementById("market-picker");
+  if (picker) picker.style.display = "none";
+}
+
+function renderMarketPicker(): void {
+  const pillsEl = document.getElementById("market-cat-pills");
+  if (pillsEl) {
+    pillsEl.innerHTML = ["all", "ccny", "sports", "politics"]
+      .map(c => `<button class="cat-pill${pickerCatFilter === c ? " active" : ""}" data-cat="${c}">${c === "all" ? "All" : c.toUpperCase()}</button>`)
+      .join("");
+  }
+
+  const listEl = document.getElementById("market-list");
+  if (!listEl) return;
+
+  const filtered = TRENDING_MARKETS.filter(m => {
+    const catOk    = pickerCatFilter === "all" || m.category === pickerCatFilter;
+    const searchOk = m.question.toLowerCase().includes(pickerSearchQuery.toLowerCase());
+    return catOk && searchOk;
+  });
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<p class="market-empty">No markets found.</p>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(m => {
+    const isSel = selectedMarket?.id === m.id;
+    return `
+      <div class="market-pick-item${isSel ? " selected" : ""}" data-market-id="${m.id}">
+        <div class="market-pick-top">
+          <span class="market-tag ${escapeHTML(m.category)}">${escapeHTML(m.category.toUpperCase())}</span>
+          <span class="market-pick-prob">${m.currProb}%</span>
+        </div>
+        <div class="market-pick-question">${escapeHTML(m.question)}</div>
+        <div class="prob-bar"><div class="prob-fill" style="width:${m.currProb}%"></div></div>
+        ${isSel ? `<div class="market-pick-check">✓ Selected</div>` : ""}
+      </div>`;
+  }).join("");
+}
+
+function attachMarket(marketId: number): void {
+  const m = TRENDING_MARKETS.find(x => x.id === marketId);
+  if (!m) return;
+  selectedMarket = m;
+  updateAttachedPreview();
+  closeMarketPicker();
+}
+
+function updateAttachedPreview(): void {
+  const preview = document.getElementById("attached-market-preview");
+  const content = document.getElementById("attached-market-content");
+  if (!preview || !content) return;
+
+  if (selectedMarket) {
+    content.innerHTML = `
+      <span class="market-tag ${escapeHTML(selectedMarket.category)}">${escapeHTML(selectedMarket.category.toUpperCase())}</span>
+      <div class="attached-market-question">${escapeHTML(selectedMarket.question)}</div>
+      <div class="prob-bar" style="margin-top:6px"><div class="prob-fill" style="width:${selectedMarket.currProb}%"></div></div>`;
+    (preview as HTMLElement).style.display = "flex";
+  } else {
+    (preview as HTMLElement).style.display = "none";
+    content.innerHTML = "";
+  }
+}
 
 function getMinutesAgo(timestamp: number): number {
   return Math.floor((Date.now() - timestamp) / 60000);
@@ -84,13 +254,11 @@ function formatTime(timestamp: number): string {
   return `${Math.floor(minutesAgo / 1440)}d`;
 }
 
-
 /* filters posts based on activeFilter which is set by clicking the time tabs */
 function filterPosts(posts: Post[]):Post[] {
   const limits: Record<string, number>  = { "Now": 60, "Today": 1440, "This Week": 10080, "This Month": 43200 };
   const limit:number= limits[activeFilter] ?? Infinity;
   return posts.filter(p => getMinutesAgo(p.timestamp) <= limit);
-
 }
 
 function escapeHTML(str: string | null | undefined): string {
@@ -209,31 +377,31 @@ function buildPostHTML(post: Post): string{
     `;
 }
 
-
 /*Thiis function is for the heart icon when you click on it it will change color and increment or decrement the like count*/
 function handleFeedClick(e: MouseEvent): void {
-// ⭐ FIRST: handle comment-submit BEFORE the early return
+  // ⭐ FIRST: handle comment-submit BEFORE the early return
   if ((e.target as HTMLElement).classList.contains("comment-submit")) {
     const id: number = parseInt((e.target as HTMLElement).dataset.id!);
     const post = postsData.find(p => p.id === id);
     const input = document.querySelector(`.comment-input[data-id="${id}"]`) as HTMLInputElement;
 
-    if (post && input.value.trim()) {
-      post.comments.push({
-        id: nextCommentId++,
-        initials: CURRENT_USER.initials,
-        name:  CURRENT_USER.name,
-        text: input.value.trim(),
-        minutesAgo: 0,          // new comment = 0 minutes ago
-        timestamp: Date.now()   // real timestamp
-      });
+    if (!post || !input || !input.value.trim()) return;
 
+    const user = getCurrentUser();
+    if (!user) { openLoginGate(); return; }
 
+    post.comments.push({
+      id: nextCommentId++,
+      initials: user.initials,
+      name:  user.name,
+      text: input.value.trim(),
+      minutesAgo: 0,          // new comment = 0 minutes ago
+      timestamp: Date.now()   // real timestamp
+    });
 
-      input.value = "";
-      localStorage.setItem("postsData", JSON.stringify(postsData));
-      renderFeed();
-    }
+    input.value = "";
+    localStorage.setItem("postsData", JSON.stringify(postsData));
+    renderFeed();
     return; // ⭐ stop here so it doesn't fall into like/share logic
   }
 
@@ -247,6 +415,9 @@ function handleFeedClick(e: MouseEvent): void {
 
   // LIKE BUTTON
   if (action === "like" && post) {
+    const user = getCurrentUser();
+    if (!user) { openLoginGate(); return; }
+
     post.liked = !post.liked;
     post.likes += post.liked ? 1 : -1;
 
@@ -272,40 +443,44 @@ function handleFeedClick(e: MouseEvent): void {
     if (section) {
       section.style.display = section.style.display === "none" ? "block" : "none";
     }
-  return;
-
+    return;
+  }
 }
-
-
-}
-
-
 
 function handleNewPost():void {
-  const textarea:HTMLTextAreaElement|null = document.querySelector<HTMLTextAreaElement>(".user-post-row textarea");
-  const text:string|undefined = textarea?.value.trim();
+  const user = getCurrentUser();
+  if (!user) { openLoginGate(); return; }
 
-  //don't post if textarea is empty
-  if (!text) return;
+  const textarea = document.querySelector<HTMLTextAreaElement>(".user-post-row textarea");
+  const text = textarea?.value.trim();
 
-  // new post structure matching buildPostHTML
+  if (!text && !pendingImageDataUrl) return;
+
   const newPost = {
-    id:         nextPostId++,           // use and then increment the counter
-    name:       CURRENT_USER.name,
-    initials:   CURRENT_USER.initials,
-    minutesAgo: 0,                      // just posted = 0 minutes ago
-    timestamp: Date.now(), 
-    text:       text,
-    image:      pendingImageDataUrl,    // null if no image was uploaded
-    liked:      false,
-    likes:      0,
-    comments:   [] as PostComment[],
-    market: {
-      question: "No market attached",  // placeholder until you build market picker
-      side:     "",
-      category: "",
-      prevProb: 0,
-      currProb: 0
+    id: nextPostId++,
+    name: user.name,
+    initials: user.initials,
+    minutesAgo: 0,
+    timestamp: Date.now(),
+    text: text || "",
+    image: pendingImageDataUrl,
+    liked: false,
+    likes: 0,
+    comments: [] as PostComment[],
+    market: selectedMarket
+      ? {
+          question: selectedMarket.question,
+          side: selectedMarket.side,
+          category: selectedMarket.category,
+          prevProb: selectedMarket.prevProb,
+          currProb: selectedMarket.currProb
+        }
+      : {
+          question: "No market attached",
+          side: "",
+          category: "",
+          prevProb: 0,
+          currProb: 0
     }
   };
 
@@ -318,13 +493,14 @@ function handleNewPost():void {
   
 
   //clear the form
-if (textarea) textarea.value = "";
+  if (textarea) textarea.value = "";
   pendingImageDataUrl = null;
+  selectedMarket = null;
+  updateAttachedPreview();
   const fileInput: HTMLInputElement | null = document.querySelector<HTMLInputElement>("#file-upload");
   if (fileInput) fileInput.value = "";
   renderFeed();
 }
-
 
 function handleTabClick(e:MouseEvent):void{ /* when you click on a tab it will change the active filter and render the feed again*/
   const tab: HTMLElement|null = (e.target as Element).closest<HTMLElement>(".time-tab");
@@ -337,7 +513,6 @@ function handleTabClick(e:MouseEvent):void{ /* when you click on a tab it will c
   renderFeed();
 }
 
-
 /* filter posts based on the active filter */
 function renderFeed():void{ 
   const fc:HTMLElement|null = document.querySelector<HTMLElement>(".posts-feed .container");
@@ -345,27 +520,28 @@ function renderFeed():void{
   const visible: Post[] = filterPosts(postsData);
   fc.innerHTML = visible.map(buildPostHTML).join("");
 }
+
 /* filter posts based on the active filter */
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelector(".posts-feed")?.addEventListener("click", handleFeedClick as EventListener);
-  document.querySelector(".btn-post")?.addEventListener("click", handleNewPost as EventListener);
+  document.getElementById("post-btn")?.addEventListener("click", handleNewPost);
   document.querySelector(".time-tabs")?.addEventListener("click", handleTabClick as EventListener);
   document.querySelector("#file-upload")?.addEventListener("change", (e) => {
-  const file = (e.target as HTMLInputElement).files?.[0];
-  if (!file) return;
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    pendingImageDataUrl = reader.result as string;
-  };
-  reader.readAsDataURL(file);
-});
+    const reader = new FileReader();
+    reader.onload = () => {
+      pendingImageDataUrl = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
 
   //used to save the active tab so when clicked it will stay the same as the tab active
-const saved:string|null = localStorage.getItem("activeTab");
+  const saved:string|null = localStorage.getItem("activeTab");
   if (saved) {
-  const matchingTab = Array.from(document.querySelectorAll<HTMLElement>(".time-tab"))
-  .find(t => t.textContent?.trim() === saved);
+    const matchingTab = Array.from(document.querySelectorAll<HTMLElement>(".time-tab"))
+      .find(t => t.textContent?.trim() === saved);
     if (matchingTab) {
       activeFilter = saved;
       document.querySelectorAll<HTMLElement>(".time-tab").forEach(t =>
@@ -374,7 +550,62 @@ const saved:string|null = localStorage.getItem("activeTab");
     }
   }
 
-  
+  // auth + sidebar + market picker + login gate wiring
+  updateAuthUI();
+  renderSidebar();
+
+  if (typeof window.EventraAuth !== "undefined") {
+    window.EventraAuth.onAuthStateChanged(() => {
+      updateAuthUI();
+    });
+  }
+
+  document.getElementById("attach-market-btn")
+    ?.addEventListener("click", openMarketPicker);
+
+  document.getElementById("market-picker-close")
+    ?.addEventListener("click", closeMarketPicker);
+
+  document.getElementById("market-picker")
+    ?.addEventListener("click", (e: Event): void => {
+      if ((e.target as HTMLElement).id === "market-picker") closeMarketPicker();
+    });
+
+  document.getElementById("market-search")
+    ?.addEventListener("input", (e: Event): void => {
+      pickerSearchQuery = (e.target as HTMLInputElement).value;
+      renderMarketPicker();
+    });
+
+  document.getElementById("market-cat-pills")
+    ?.addEventListener("click", (e: Event): void => {
+      const pill = (e.target as Element).closest<HTMLElement>(".cat-pill");
+      if (!pill) return;
+      pickerCatFilter = pill.dataset.cat ?? "all";
+      renderMarketPicker();
+    });
+
+  document.getElementById("market-list")
+    ?.addEventListener("click", (e: Event): void => {
+      const item = (e.target as Element).closest<HTMLElement>(".market-pick-item");
+      if (!item) return;
+      const mid = parseInt(item.dataset.marketId ?? "", 10);
+      attachMarket(mid);
+    });
+
+  document.getElementById("detach-market-btn")
+    ?.addEventListener("click", (): void => {
+      selectedMarket = null;
+      updateAttachedPreview();
+    });
+
+  document.getElementById("login-gate-close")
+    ?.addEventListener("click", closeLoginGate);
+
+  document.getElementById("login-gate")
+    ?.addEventListener("click", (e: Event): void => {
+      if ((e.target as HTMLElement).id === "login-gate") closeLoginGate();
+    });
+
+
 });
-
-
