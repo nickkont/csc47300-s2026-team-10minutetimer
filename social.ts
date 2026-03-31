@@ -13,6 +13,7 @@ interface Post {
   name: string;
   initials: string;
   minutesAgo: number;
+  timestamp: number;
   text: string;
   image: string | null;
   liked: boolean;
@@ -26,33 +27,49 @@ let postsData: Post[] = [];
 fetch("sample-posts.json")
   .then(async (r) => await r.json() as Post[])
   .then((data: Post[]): void => {
-    postsData.push(...data);
+    const now = Date.now();
+
+    // Convert minutesAgo -> timestamp for real-time updates
+    postsData = data.map(p => ({
+      ...p,
+      timestamp: now - p.minutesAgo * 60000
+    }));
+
     renderFeed();
   });
+
 
 /* in-memory "database" of posts, comments, and which threads are open. */ 
 let nextPostId: number= 1000;
 /* which time-filter is active (matches .time-tab text) */
-let activeFilter:string = "Now";
+let activeFilter: string = "Today";
+
 
 /*it's currently null until user selects an image */
 let pendingImageDataUrl:string|null = null;
 
 const CURRENT_USER:{ initials:string, name: string}={initials:"JD", name: "John Doe" };
 
+function getMinutesAgo(timestamp: number): number {
+  return Math.floor((Date.now() - timestamp) / 60000);
+}
 
-/* formats time to m(minutes), h(hours), or d(days) */
-function formatTime(minutesAgo:number):string {
-  if (minutesAgo < 1)   return "now";
-  if (minutesAgo < 60)  return `${minutesAgo}m`;
+function formatTime(timestamp: number): string {
+  const minutesAgo = getMinutesAgo(timestamp);
+
+  if (minutesAgo < 1) return "now";
+  if (minutesAgo < 60) return `${minutesAgo}m`;
   if (minutesAgo < 1440) return `${Math.floor(minutesAgo / 60)}h`;
   return `${Math.floor(minutesAgo / 1440)}d`;
 }
+
+
 /* filters posts based on activeFilter which is set by clicking the time tabs */
 function filterPosts(posts: Post[]):Post[] {
   const limits: Record<string, number>  = { "Now": 60, "Today": 1440, "This Week": 10080, "This Month": 43200 };
   const limit:number= limits[activeFilter] ?? Infinity;
-  return posts.filter(p => p.minutesAgo <= limit);
+  return posts.filter(p => getMinutesAgo(p.timestamp) <= limit);
+
 }
 
 function escapeHTML(str: string | null | undefined): string {
@@ -104,7 +121,7 @@ function buildPostHTML(post: Post): string{
       <div class="field">
         <div class="post-header">
           <strong>${escapeHTML(post.name)}</strong>
-          <span class="post-time">${formatTime(post.minutesAgo)}</span>
+          <span class="post-time">${formatTime(post.timestamp)}</span>
         </div>
         <div class="post-content">
           <p class="post-text">${escapeHTML(post.text)}</p>
@@ -177,6 +194,7 @@ function handleNewPost():void {
     name:       CURRENT_USER.name,
     initials:   CURRENT_USER.initials,
     minutesAgo: 0,                      // just posted = 0 minutes ago
+    timestamp: Date.now(), 
     text:       text,
     image:      pendingImageDataUrl,    // null if no image was uploaded
     liked:      false,
@@ -197,6 +215,7 @@ function handleNewPost():void {
   // Save the whole array to localStorage as a JSON string
   // so posts survive a page refresh
   localStorage.setItem("postsData", JSON.stringify(postsData));
+  
 
   //clear the form
 if (textarea) textarea.value = "";
@@ -214,6 +233,7 @@ function handleTabClick(e:MouseEvent):void{ /* when you click on a tab it will c
   document.querySelectorAll<HTMLElement>(".time-tab").forEach(t =>
     t.classList.toggle("active", t === tab)
   );
+  localStorage.setItem("activeTab", activeFilter);
   renderFeed();
 }
 

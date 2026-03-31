@@ -2,20 +2,28 @@
 //convert js to ts
 let postsData = [];
 fetch("sample-posts.json")
-    .then((r) => r.json())
+    .then(async (r) => await r.json())
     .then((data) => {
-    postsData.push(...data);
+    const now = Date.now();
+    // Convert minutesAgo -> timestamp for real-time updates
+    postsData = data.map(p => ({
+        ...p,
+        timestamp: now - p.minutesAgo * 60000
+    }));
     renderFeed();
 });
 /* in-memory "database" of posts, comments, and which threads are open. */
 let nextPostId = 1000;
 /* which time-filter is active (matches .time-tab text) */
-let activeFilter = "Now";
+let activeFilter = "Today";
 /*it's currently null until user selects an image */
 let pendingImageDataUrl = null;
 const CURRENT_USER = { initials: "JD", name: "John Doe" };
-/* formats time to m(minutes), h(hours), or d(days) */
-function formatTime(minutesAgo) {
+function getMinutesAgo(timestamp) {
+    return Math.floor((Date.now() - timestamp) / 60000);
+}
+function formatTime(timestamp) {
+    const minutesAgo = getMinutesAgo(timestamp);
     if (minutesAgo < 1)
         return "now";
     if (minutesAgo < 60)
@@ -26,10 +34,9 @@ function formatTime(minutesAgo) {
 }
 /* filters posts based on activeFilter which is set by clicking the time tabs */
 function filterPosts(posts) {
-    var _a;
     const limits = { "Now": 60, "Today": 1440, "This Week": 10080, "This Month": 43200 };
-    const limit = (_a = limits[activeFilter]) !== null && _a !== void 0 ? _a : Infinity;
-    return posts.filter(p => p.minutesAgo <= limit);
+    const limit = limits[activeFilter] ?? Infinity;
+    return posts.filter(p => getMinutesAgo(p.timestamp) <= limit);
 }
 function escapeHTML(str) {
     if (str === undefined || str === null)
@@ -77,7 +84,7 @@ function buildPostHTML(post) {
       <div class="field">
         <div class="post-header">
           <strong>${escapeHTML(post.name)}</strong>
-          <span class="post-time">${formatTime(post.minutesAgo)}</span>
+          <span class="post-time">${formatTime(post.timestamp)}</span>
         </div>
         <div class="post-content">
           <p class="post-text">${escapeHTML(post.text)}</p>
@@ -112,12 +119,11 @@ function buildPostHTML(post) {
 }
 /*Thiis function is for the heart icon when you click on it it will change color and increment or decrement the like count*/
 function handleFeedClick(e) {
-    var _a;
     const btn = e.target.closest("[data-action]");
     if (!btn)
         return;
     const action = btn.dataset.action;
-    const id = parseInt((_a = btn.dataset["id"]) !== null && _a !== void 0 ? _a : "", 10);
+    const id = parseInt(btn.dataset["id"] ?? "", 10);
     const post = postsData.find(p => p.id === id);
     if (action === "like" && post) {
         post.liked = !post.liked;
@@ -135,7 +141,7 @@ function handleFeedClick(e) {
 }
 function handleNewPost() {
     const textarea = document.querySelector(".user-post-row textarea");
-    const text = textarea === null || textarea === void 0 ? void 0 : textarea.value.trim();
+    const text = textarea?.value.trim();
     //don't post if textarea is empty
     if (!text)
         return;
@@ -145,6 +151,7 @@ function handleNewPost() {
         name: CURRENT_USER.name,
         initials: CURRENT_USER.initials,
         minutesAgo: 0, // just posted = 0 minutes ago
+        timestamp: Date.now(),
         text: text,
         image: pendingImageDataUrl, // null if no image was uploaded
         liked: false,
@@ -173,12 +180,12 @@ function handleNewPost() {
     renderFeed();
 }
 function handleTabClick(e) {
-    var _a, _b;
     const tab = e.target.closest(".time-tab");
     if (!tab)
         return;
-    activeFilter = (_b = (_a = tab.textContent) === null || _a === void 0 ? void 0 : _a.trim()) !== null && _b !== void 0 ? _b : "Now";
+    activeFilter = tab.textContent?.trim() ?? "Now";
     document.querySelectorAll(".time-tab").forEach(t => t.classList.toggle("active", t === tab));
+    localStorage.setItem("activeTab", activeFilter);
     renderFeed();
 }
 /* filter posts based on the active filter */
@@ -191,15 +198,14 @@ function renderFeed() {
 }
 /* filter posts based on the active filter */
 document.addEventListener("DOMContentLoaded", () => {
-    var _a, _b, _c;
-    (_a = document.querySelector(".posts-feed")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", handleFeedClick);
-    (_b = document.querySelector(".btn-post")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", handleNewPost);
-    (_c = document.querySelector(".time-tabs")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", handleTabClick);
+    document.querySelector(".posts-feed")?.addEventListener("click", handleFeedClick);
+    document.querySelector(".btn-post")?.addEventListener("click", handleNewPost);
+    document.querySelector(".time-tabs")?.addEventListener("click", handleTabClick);
     //used to save the active tab so when clicked it will stay the same as the tab active
     const saved = localStorage.getItem("activeTab");
     if (saved) {
         const matchingTab = Array.from(document.querySelectorAll(".time-tab"))
-            .find(t => { var _a; return ((_a = t.textContent) === null || _a === void 0 ? void 0 : _a.trim()) === saved; });
+            .find(t => t.textContent?.trim() === saved);
         if (matchingTab) {
             activeFilter = saved;
             document.querySelectorAll(".time-tab").forEach(t => t.classList.toggle("active", t === matchingTab));

@@ -6,8 +6,8 @@
   --border:  rgba(255, 255, 255, 0.11);
   --text:    rgba(255, 255, 255, 0.92);
   --muted:   rgba(255, 255, 255, 0.45);
-  --accent:  #2cff9a;
-  --accent2: #4be3ff;
+  --accent:  rgb(65, 218, 121);
+  --accent2: rgba(124, 58, 237, 1);
   --radius:  14px;
 }
 
@@ -51,7 +51,7 @@ a { color: inherit; text-decoration: none; }
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: linear-gradient(135deg, rgba(75, 227, 255, 0.7), rgba(44, 255, 154, 0.55));
+  background: linear-gradient(135deg, rgba(124, 58, 237, 1), rgba(34, 197, 94, 1));
 }
 
 .brand strong { font-size: 15px; }
@@ -67,7 +67,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .nav-links a:hover  { color: var(--text); border-color: var(--border); }
-.nav-links a:active { color: var(--accent); border-color: rgba(44, 255, 154, 0.25); background: rgba(44, 255, 154, 0.06); }
+.nav-links a:active { color: var(--accent); border-color: rgba(171, 44, 255, 0.25); background: rgba(44, 255, 154, 0.06); }
 
 /* Avatar used in nav and post rows */
 .avatar {
