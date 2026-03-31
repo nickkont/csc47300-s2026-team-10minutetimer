@@ -405,6 +405,84 @@ footer {
   border-top: 1px solid var(--border);
 }
 
+
+
+
+
+
+
+
+/* Comment Section */
+.comment-section {
+  margin-top: 10px;
+  padding-left: 45px;
+}
+
+.comment-list {
+  margin-bottom: 8px;
+}
+
+.comment-item {
+  background: #f3f3f3;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 14px;
+  display: flex;
+  gap: 6px;
+}
+
+.comment-author {
+  font-weight: bold;
+  color: #333;
+}
+
+.comment-text {
+  color: #555;
+}
+
+/* Comment Input */
+.comment-box {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.comment-input {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.comment-submit {
+  padding: 6px 12px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.comment-submit:hover {
+  background: #005fcc;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* ── RESPONSIVE ── */
 @media (max-width: 600px) {
   .nav-links { display: none; }

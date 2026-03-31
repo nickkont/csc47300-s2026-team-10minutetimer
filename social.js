@@ -5,15 +5,22 @@ fetch("sample-posts.json")
     .then(async (r) => await r.json())
     .then((data) => {
     const now = Date.now();
-    // Convert minutesAgo -> timestamp for real-time updates
     postsData = data.map(p => ({
         ...p,
-        timestamp: now - p.minutesAgo * 60000
+        // Convert post minutesAgo -> timestamp
+        timestamp: now - p.minutesAgo * 60000,
+        // Convert comment minutesAgo -> timestamp
+        comments: p.comments.map(c => ({
+            ...c,
+            timestamp: now - c.minutesAgo * 60000
+        }))
     }));
     renderFeed();
 });
 /* in-memory "database" of posts, comments, and which threads are open. */
 let nextPostId = 1000;
+let nextCommentId = 5000;
+const openComments = new Set();
 /* which time-filter is active (matches .time-tab text) */
 let activeFilter = "Today";
 /*it's currently null until user selects an image */
@@ -55,7 +62,7 @@ function buildPostHTML(post) {
     /*sets the color of the probablity bar based on the probability between 0-100*/
     const prob = Math.min(100, Math.max(0, post.market.currProb));
     /*keep count of comments */
-    const commentCount = typeof post.comments === 'number' ? post.comments : 0;
+    const commentCount = post.comments.length;
     const imageHTML = post.image
         ? `<div class="post-images">
          <img src="${escapeHTML(post.image)}" alt="post image"/>
@@ -92,12 +99,14 @@ function buildPostHTML(post) {
               ${marketHTML} 
        <hr class="divider">
        <div class="post-actions">
+
             <div class="post-action-row">
             <!-- comment icon-->
-            <button class="action-btn" id="comment_btn">
+            <button class="action-btn" id="comment_btn" data-action="comment" data-id="${post.id}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <p id="reply_count" data-id="${post.id}">${commentCount}</p>
-             </button>
+            <p id="reply_count">${commentCount}</p>
+          </button>
+
             <button class="action-btn" id="like_btn" data-action="like" data-id="${post.id}">
               <!-- heart icon -->
               <svg viewBox="0 0 24 24" fill="${heartFill}" stroke="${heartStroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -112,6 +121,34 @@ function buildPostHTML(post) {
             ${buyHTML} 
         </div>
       </div>
+  <div class="comment-section" data-id="${post.id}">
+          <div class="comment-list">
+            ${post.comments.map((c) => `
+                <div class="comment-item">
+                  <div class="comment-avatar">${escapeHTML(c.initials)}</div>
+
+                  <div class="comment-body">
+                    <div class="comment-header">
+                      <span class="comment-author">${escapeHTML(c.name)}</span>
+                      <span class="comment-time">${formatTime(c.timestamp)}</span>
+                    </div>
+
+                    <div class="comment-text">${escapeHTML(c.text)}</div>
+                  </div>
+                </div>
+              `).join("")}
+          </div>
+
+          <div class="comment-box">
+            <input 
+              type="text"
+              class="comment-input"
+              placeholder="Write a comment..."
+              data-id="${post.id}"
+            >
+            <button class="comment-submit" data-id="${post.id}">Post</button>
+          </div>
+          </div>
     </div>
     </div>     
   </div>
@@ -119,24 +156,59 @@ function buildPostHTML(post) {
 }
 /*Thiis function is for the heart icon when you click on it it will change color and increment or decrement the like count*/
 function handleFeedClick(e) {
+    // ⭐ FIRST: handle comment-submit BEFORE the early return
+    if (e.target.classList.contains("comment-submit")) {
+        const id = parseInt(e.target.dataset.id);
+        const post = postsData.find(p => p.id === id);
+        const input = document.querySelector(`.comment-input[data-id="${id}"]`);
+        if (post && input.value.trim()) {
+            post.comments.push({
+                id: nextCommentId++,
+                initials: CURRENT_USER.initials,
+                name: CURRENT_USER.name,
+                text: input.value.trim(),
+                minutesAgo: 0, // new comment = 0 minutes ago
+                timestamp: Date.now() // real timestamp
+            });
+            input.value = "";
+            localStorage.setItem("postsData", JSON.stringify(postsData));
+            renderFeed();
+        }
+        return; // ⭐ stop here so it doesn't fall into like/share logic
+    }
+    // ⭐ THEN handle like/share buttons
     const btn = e.target.closest("[data-action]");
     if (!btn)
         return;
     const action = btn.dataset.action;
     const id = parseInt(btn.dataset["id"] ?? "", 10);
     const post = postsData.find(p => p.id === id);
+    // LIKE BUTTON
     if (action === "like" && post) {
         post.liked = !post.liked;
         post.likes += post.liked ? 1 : -1;
         const likecountid = document.querySelector(`.like_count[data-id="${id}"]`);
-        if (likecountid) {
+        if (likecountid)
             likecountid.textContent = String(post.likes);
-        }
         const svg = btn.querySelector("svg");
         if (svg) {
             svg.setAttribute("fill", post.liked ? "red" : "none");
             svg.setAttribute("stroke", post.liked ? "red" : "currentColor");
         }
+    }
+    // COMMENT ICON TOGGLE
+    if (btn.id === "comment_btn") {
+        const section = document.querySelector(`.comment-section[data-id="${id}"]`);
+        if (section) {
+            section.style.display = section.style.display === "none" ? "block" : "none";
+        }
+    }
+    if (action === "comment") {
+        const section = document.querySelector(`.comment-section[data-id="${id}"]`);
+        if (section) {
+            section.style.display = section.style.display === "none" ? "block" : "none";
+        }
+        return;
     }
 }
 function handleNewPost() {
@@ -156,7 +228,7 @@ function handleNewPost() {
         image: pendingImageDataUrl, // null if no image was uploaded
         liked: false,
         likes: 0,
-        comments: 0,
+        comments: [],
         market: {
             question: "No market attached", // placeholder until you build market picker
             side: "",

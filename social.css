@@ -80,7 +80,8 @@ a { color: inherit; text-decoration: none; }
   justify-content: center;
   font-size: 11px;
   font-weight: 700;
-  color: #050a12;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px #8a8b8d;
 }
 
 /* ── PAGE ── */
@@ -147,7 +148,8 @@ a { color: inherit; text-decoration: none; }
   justify-content: center;
   font-size: 14px;
   font-weight: 700;
-  color: #050a12;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px #cbccce;
   flex-shrink: 0;
 }
 
@@ -161,7 +163,8 @@ a { color: inherit; text-decoration: none; }
   justify-content: center;
   font-size: 14px;
   font-weight: 700;
-  color: #050a12;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px #8a8b8d;
   flex-shrink: 0;
 }
 
@@ -351,7 +354,8 @@ a { color: inherit; text-decoration: none; }
   border-radius: 8px;
   cursor: pointer;
   background: linear-gradient(135deg, var(--accent2), var(--accent));
-  color: #050a12;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px #8a8b8d;
   border: none;
 }
 
@@ -364,7 +368,8 @@ a { color: inherit; text-decoration: none; }
   margin-right: 20px;
   cursor: pointer;
   background: linear-gradient(135deg, var(--accent2), var(--accent));
-  color: #050a12;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px #8a8b8d;
   border: none;
 
 }
@@ -407,6 +412,140 @@ a { color: inherit; text-decoration: none; }
 }
 
 #file-upload { display: none; }
+
+
+
+
+
+/* COMMENT SECTION (toggles when comment button is clicked) */
+
+.comment-section {
+  display: none; /* JS toggles this */
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  animation: commentSlide 0.25s ease-out;
+}
+
+/* Slide-down animation */
+@keyframes commentSlide {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Comment list */
+/* COMMENT ITEM — avatar left, content right */
+.comment-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+}
+
+/* AVATAR BUBBLE */
+.comment-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #e7e5e5;
+  flex-shrink: 0;
+}
+
+/* RIGHT SIDE OF COMMENT */
+.comment-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+/* NAME + TIMESTAMP ON SAME ROW */
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* USERNAME */
+.comment-author {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* TIMESTAMP */
+.comment-time {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* COMMENT TEXT BELOW */
+.comment-text {
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.9;
+}
+
+/* COMMENT LIST SPACING */
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+/* COMMENT INPUT BOX */
+.comment-box {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.comment-input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.comment-input::placeholder {
+  color: var(--muted);
+}
+
+.comment-submit {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+}
+
+.comment-submit:hover {
+  opacity: 0.85;
+}
+
+
+
 
 /* ── FOOTER ── */
 footer {

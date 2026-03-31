@@ -8,7 +8,7 @@
     "image":      null,
     "likes":      42,
     "liked":      false,       
-    "comments":   8,
+    "comments":   [{ "id": 2, "initials": "SK","name":"Saiki K","text": "Nice post!", "minutesAgo": 1 }, { "id": 1, "initials": "MDL","name":"Monkey D. Luffy", "text": "I agree!", "minutesAgo": 2 }],
     "market": {
       "question": "Will One Piece end before 2030?",
       "side":     "Yes",
@@ -26,7 +26,7 @@
     "image":      "eventra images/The-Disastrous-Life-of-Saiki-K.jpg",
     "likes":      127,
     "liked":      false,
-    "comments":   23,
+    "comments":   [],
     "market": {
       "question": "Will Saiki K get an english dub for season 2?",
       "side":     "Yes",
@@ -44,7 +44,7 @@
     "image":      null,
     "likes":      88,
     "liked":      false,
-    "comments":   5,
+    "comments":   [],
     "market": {
       "question": "Will Zoro ever get lost again?",
       "side":     "Yes",
@@ -62,7 +62,7 @@
     "image":      null,
     "likes":      204,
     "liked":      false,
-    "comments":   41,
+    "comments":   [],
     "market": {
       "question": "Will JOJOs Bizarre Adventure get another season?",
       "side":     "Yes",
@@ -80,7 +80,7 @@
     "image":      null,
     "likes":      310,
     "liked":      false,
-    "comments":   67,
+    "comments":   [],
     "market": {
       "question": "Will Dio Brando ever be defeated?",
       "side":     "No",
